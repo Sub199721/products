@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Product List</h1>
+    <input type="text" id="name" placeholder="Enter Product Name">
+    <input type="number" id="price" placeholder="Enter Product price">
+    <input type="text"  id="search" placeholder="Search Product..." onkeyup="searchProduct()" >
+    <button onclick="addProducts()">Add Product</button>
+    <h2>Stored Products</h2>
+    <ul id="Stored"></ul>
+
+    <script>
+        let editId=null
+        window.addEventListener("load",displayProduct())
+        function addProducts(){
+            let name=document.getElementById("name").value
+            let price=document.getElementById("price").value
+            if(!name || !price){
+                alert("Please enter product name and price!")
+                return
+            }
+            let products=JSON.parse(localStorage.getItem("products")) || []
+            if(editId){
+                products=products.map(p=>{
+                    if(editId==p.id){
+                        return {...p,name:name,price:Number(price)}
+                    }
+                    return p
+                })
+
+            }else{
+                let newProduct={
+                id:Date.now(),
+                name:name,
+                price:Number(price)
+            }
+            products.push(newProduct)
+            }
+            localStorage.setItem("products",JSON.stringify(products))
+            document.getElementById("name").value=""
+            document.getElementById("price").value=""
+            displayProduct()
+        }
+        function displayProduct(filtered=null){
+            let ul=document.getElementById("Stored")
+            ul.innerHTML=""
+            let products=filtered ||JSON.parse(localStorage.getItem("products")) || []
+            products.forEach(p => {
+                let li=document.createElement("li")
+                li.innerHTML=`
+                ${p.name} - ${p.price}/-
+                <button onclick="deleteProduct(${p.id})">Delete</button>
+                <button onclick="editProduct(${p.id})">Edit</button><br><br>
+                `
+                ul.appendChild(li)
+            });
+
+        }
+        function deleteProduct(id){
+            let products=JSON.parse(localStorage.getItem("products")) || []
+            let updateProducts=products.filter(p=>id!==p.id)
+            localStorage.setItem("products",JSON.stringify(updateProducts))
+            displayProduct()
+        }
+        function editProduct(id){
+            let products=JSON.parse(localStorage.getItem("products")) || []
+            let updateProducts=products.find(p=>p.id==id)
+            document.getElementById("name").value=updateProducts.name
+            document.getElementById("price").value=updateProducts.price
+            editId=id
+        }
+        function searchProduct(){
+            let products=JSON.parse(localStorage.getItem("products")) || []
+            let searchItem=document.getElementById("search").value.toLowerCase()
+            let updateProducts=products.filter(p=>{
+                return p.name.toLowerCase().includes(searchItem)
+            })
+            displayProduct(updateProducts)
+        }
+    </script>
+    
+</body>
+</html>
